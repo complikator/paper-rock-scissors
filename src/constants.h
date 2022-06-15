@@ -6,3 +6,11 @@
 #define MAX_CONNECTIONS 12
 
 #define GROUP_SIZE 3
+
+#define MAX_MSG 64
+
+// game objects
+
+#define PAPER "paper"
+#define ROCK "rock"
+#define SCISSORS "scissorc"

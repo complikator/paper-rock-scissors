@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <sys/epoll.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "network_utils.h"
 #include "utils.h"
@@ -23,9 +24,6 @@ typedef struct {
 
 typedef struct {
   int socket;
-
-  int waiting_clients_count;
-  int waiting_clients[GROUP_SIZE];
 
   int clients_fds[MAX_CONNECTIONS];
   int clients_count;

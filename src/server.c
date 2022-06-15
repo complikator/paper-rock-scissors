@@ -25,11 +25,17 @@ server_config_t *prepare_server(initial_config_t *config) {
 
   out->socket = set_up_socket(config);
 
-  out->waiting_clients_count = 0;
-
   out->clients_count = 0;
 
   return out;
+}
+
+void reject_connection(int fd, char *reason) {
+  if (send(fd, reason, strlen(reason), 0) < 0)
+    ERR("send");
+
+    if (close(fd))
+      ERR("close");
 }
 
 void handle_new_connection(server_config_t *config) {
@@ -39,24 +45,26 @@ void handle_new_connection(server_config_t *config) {
     ERR("accept");
 
   if (config->clients_count == MAX_CONNECTIONS) {
-    if (close(client_fd))
-      ERR("close");
+    reject_connection(client_fd, "Server overloaded, try later.");
 
     return;
   }
 
-  config->waiting_clients[config->waiting_clients_count++] = client_fd;
+  shared_data_t *data = config->threads_shared_data;
+
+  pthread_mutex_lock(&data->waiting_mutex);
+
+  data->waiting_clients[data->waiting_clients_count++] = client_fd;
+
+  pthread_mutex_unlock(&data->waiting_mutex);
 
   printf("new connection handled\n");
 }
 
 void dispatch_waiting_clients(server_config_t *config) {
-  if (config->waiting_clients_count == GROUP_SIZE) {
-    printf("group formed\n");
-  }
+  printf("group formed\n");
 
-  config->waiting_clients_count = 0;
-
+  add_new_game(config->threads_shared_data);
 }
 
 void handle_events(struct epoll_event *events, int count, server_config_t* config) {
@@ -64,7 +72,9 @@ void handle_events(struct epoll_event *events, int count, server_config_t* confi
     if (events[i].data.fd == config->socket) {
       handle_new_connection(config);
 
-      dispatch_waiting_clients(config);
+      if (config->threads_shared_data->waiting_clients_count == GROUP_SIZE) {
+        dispatch_waiting_clients(config);
+      }
     }
   }
 }

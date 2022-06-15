@@ -12,3 +12,12 @@ void usage() {
   exit(EXIT_FAILURE);
 }
 
+int find_index_of_element(int *array, int size, int element) {
+  for (int i = 0; i < size; i++) {
+    if (array[i] == element)
+      return i;
+  }
+
+  return -1;
+}
+

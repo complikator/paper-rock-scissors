@@ -7,5 +7,7 @@
 
 void usage();
 
+int find_index_of_element(int *array, int size, int element);
+
 
 #endif
